@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { io } from "socket.io-client";
 import Msg from "./components/Msg";
+import Member from "./components/Member";
 
 const App = () => {
   const socket = useMemo(() => io("http://localhost:3000"), []);
   const [message, setMessage] = useState("");
-  const [msgArray, setMsgArray] = useState("");
-    const [check, setCheck] = useState([]);
-
+  const [msgArray, setMsgArray] = useState(["|| You All Can Chat Here ||"]);
+  const [member, setMember] = useState([]);
+  const [socketID, setSocketId] = useState("");
   const handleClick = (e) => {
-    const ID = socket.id;
     e.preventDefault();
-    socket.emit("message", { ID, message });
+    socket.emit("message", { socketID, message });
     setMessage("");
-      setMsgArray((prevArray) => [...prevArray, message]);
+    setSocketId("");
+    setMsgArray((prevArray) => [...prevArray, message]);
   };
 
   useEffect(() => {
@@ -23,11 +24,11 @@ const App = () => {
     socket.on("disconnect", () => {
       console.log("Client disconnected");
     });
-    socket.on("msg", (m) => {
-      console.log(m);
+    socket.on("msg", (join) => {
+      setMember((m) => [...m, join]);
     });
     socket.on("recieve-message", (data) => {
-       setMsgArray((p) => [data]);
+      setMsgArray((p) => [...p, data]);
     });
 
     return () => {
@@ -42,6 +43,12 @@ const App = () => {
   return (
     <div>
       <form onSubmit={handleClick}>
+        <div>SocketID</div>
+        <input
+          placeholder="Enter ID"
+          onChange={(e) => setSocketId(e.currentTarget.value)}
+          value={socketID}
+        />
         <div>TEXT MESSAGE</div>
         <input
           placeholder="Enter Text"
@@ -50,6 +57,7 @@ const App = () => {
         />
         <button type="submit">SEND</button>
       </form>
+      <Member mem={member} />
       <Msg msg={{ msgArray }} />
     </div>
   );

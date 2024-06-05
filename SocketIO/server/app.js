@@ -18,16 +18,19 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("User Connected", socket.id);
-    
-/* # MOSTLY emit is done by frontend 
+
+  /* # MOSTLY emit is done by frontend 
    # We apply the emit in server but we trigger it from frontend*/
-//  socket.broadcast.emit("msg", `${socket.id} has joined Beehive`);
-    socket.emit("msg",`Welcome ${socket.id} in beehive`)
-    socket.on("message",({ID,message})=>{
-        console.log(message)
-        socket.broadcast.emit("recieve-message",`${ID} ::> ${message}`)
-    })
-    
+  socket.broadcast.emit("msg", ` ${socket.id} has joined Beehive `);
+  socket.emit("msg", `Welcome ${socket.id} in beehive`);
+  socket.on("message", ({ socketID, message }) => {
+    console.log(message);
+    if (socketID) {
+      io.to(socketID).emit("recieve-message", `${socket.id} ::> ${message}`);
+    } else {
+      socket.broadcast.emit("recieve-message", `${socket.id} ::> ${message}`);
+    }
+  });
 });
 
 server.listen(PORT, () => {
